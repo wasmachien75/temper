@@ -29,10 +29,14 @@ def get_segment():
 def print_temp(curr, future, segment):
     segment.text = format_temp(curr) + format_temp(future)
 
+def waiting(segment):
+    segment.text = "..."
+
 
 if __name__ == "__main__":
     seg = get_segment()
     while True:
+        waiting(seg)
         curr, future = get_current_and_future_temp()
         print_temp(curr, future, seg)
         time.sleep(900)
