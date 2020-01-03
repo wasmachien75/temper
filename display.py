@@ -3,6 +3,8 @@ import time
 from luma.led_matrix.device import max7219
 from luma.core.interface.serial import spi, noop
 from luma.core.virtual import viewport, sevensegment
+from datetime import datetime
+import math
 
 
 
@@ -29,8 +31,29 @@ def get_segment():
 def print_temp(curr, future, segment):
     segment.text = format_temp(curr) + format_temp(future)
 
+def print_train(train_tup, segment):
+    s = train_tup[0]
+    if train_tup[1] > 0:
+        s += "[+" + str(train_tup[1]) + "]"
+    segment.text = s
+
 def waiting(segment):
     segment.text = "..."
+
+def get_next_trains():
+    url = "https://api.irail.be/connections/?from=Leuven&to=Brussels-North&format=json"
+    headers = {
+        'User-Agent': 'willemvanlishout@gmail.com',
+    }
+    r = requests.get(url, headers=headers)
+    r.raise_for_status()
+    data = r.json()
+    first_trains = [(x["departure"]["time"], x["departure"]["delay"]) for x in data["connection"][0:3]]
+    return [(epoch_to_hhmm(t[0]), math.floor(int(t[1]) / 60) ) for t in first_trains]
+
+def epoch_to_hhmm(epoch):
+    ts = datetime.fromtimestamp(int(epoch))
+    return ts.strftime("%H%M")
 
 
 if __name__ == "__main__":
@@ -38,5 +61,14 @@ if __name__ == "__main__":
     while True:
         waiting(seg)
         curr, future = get_current_and_future_temp()
-        print_temp(curr, future, seg)
-        time.sleep(900)
+        trains = get_next_trains()
+        cnt = 0
+        while cnt < 50:
+            cnt += 1
+            print_temp(curr, future, seg)
+            time.sleep(6)
+            for train in trains:
+                print_train(train, seg)
+                time.sleep(6)
+
+

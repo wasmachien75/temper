@@ -9,3 +9,8 @@ def test_get_current_and_future_temp():
 def test_format_temp():
     formatted = format_temp(4.51)
     assert formatted == "5°  "
+
+def test_trains():
+    trains = get_next_trains()
+    assert len(trains) == 3
+    print(trains)
